@@ -15,6 +15,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
+let analytics;
 isSupported().then((supported) => {
   if (supported) {
     analytics = getAnalytics(app);
@@ -35,4 +36,3 @@ export const initFirestorePersistence = async () => {
 };
 
 export default app;
-
