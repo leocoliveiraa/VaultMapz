@@ -157,6 +157,7 @@ const WelcomeSection = styled.div<{ $theme: "light" | "dark" }>`
   color: white;
   padding: 1.5rem;
   border-radius: 12px;
+  text-align: center;
   margin-bottom: 1.5rem;
   box-shadow: ${(props) =>
     props.$theme === "light"
@@ -428,3 +429,4 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
