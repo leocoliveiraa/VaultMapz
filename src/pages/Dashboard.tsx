@@ -205,6 +205,7 @@ const WelcomeSubtitle = styled.p`
   line-height: 1.5;
   max-width: 600px;
   position: relative;
+  text-align: center;
   z-index: 1;
 
   @media (min-width: 768px) {
@@ -429,6 +430,7 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
 
 
 
