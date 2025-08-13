@@ -150,6 +150,11 @@ const ChartContainer = styled.div<{ $theme: "light" | "dark" }>`
 `;
 
 const WelcomeSection = styled.div<{ $theme: "light" | "dark" }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centraliza conteúdo */
+  justify-content: center; /* Alinha verticalmente se necessário */
+  text-align: center;
   background: ${(props) =>
     props.$theme === "light"
       ? "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)"
@@ -200,7 +205,7 @@ const WelcomeTitle = styled.h1`
 const WelcomeSubtitle = styled.p`
   font-size: 0.875rem;
   opacity: 0.9;
-  margin: 0;
+  margin: 0 auto;
   font-weight: 400;
   line-height: 1.5;
   max-width: 600px;
@@ -430,6 +435,7 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
 
 
 
