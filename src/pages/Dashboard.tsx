@@ -241,7 +241,7 @@ const Dashboard: React.FC = () => {
     } catch (error: any) {
       console.error("Erro ao buscar transações:", error);
       
-      const errorMessages = {
+      const errorMessages: Record<string, string> = {
         "permission-denied": "Permissão negada. Verifique suas credenciais.",
         "unauthenticated": "Usuário não autenticado. Faça login novamente.",
       };
