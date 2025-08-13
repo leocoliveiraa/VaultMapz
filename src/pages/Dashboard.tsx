@@ -157,7 +157,6 @@ const WelcomeSection = styled.div<{ $theme: "light" | "dark" }>`
   color: white;
   padding: 1.5rem;
   border-radius: 12px;
-  text-align: center;
   margin-bottom: 1.5rem;
   box-shadow: ${(props) =>
     props.$theme === "light"
@@ -185,6 +184,7 @@ const WelcomeSection = styled.div<{ $theme: "light" | "dark" }>`
 
 const WelcomeTitle = styled.h1`
   font-size: 1.5rem;
+    text-align: center;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.025em;
@@ -429,4 +429,5 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
 
