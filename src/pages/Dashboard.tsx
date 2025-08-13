@@ -152,8 +152,8 @@ const ChartContainer = styled.div<{ $theme: "light" | "dark" }>`
 const WelcomeSection = styled.div<{ $theme: "light" | "dark" }>`
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centraliza conteúdo */
-  justify-content: center; /* Alinha verticalmente se necessário */
+  align-items: center;
+  justify-content: center;
   text-align: center;
   background: ${(props) =>
     props.$theme === "light"
@@ -435,6 +435,7 @@ const Dashboard: React.FC = () => {
 };
 
 export default Dashboard;
+
 
 
 
