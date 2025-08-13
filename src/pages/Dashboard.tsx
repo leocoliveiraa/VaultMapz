@@ -7,276 +7,213 @@ import { useTheme, colors } from "../contexts/ThemeContext";
 import TransactionForm from "../components/TransactionForm";
 import TransactionList from "../components/TransactionList";
 import Chart from "../components/Chart";
-import {
-  FiAlertCircle,
-  FiTrendingUp,
-  FiDollarSign,
-  FiPieChart,
-} from "react-icons/fi";
+import { FiAlertCircle, FiTrendingUp, FiTrendingDown, FiDollarSign, FiActivity } from "react-icons/fi";
 
-const DashboardContainer = styled.div<{ $theme: "light" | "dark" }>`
-  display: flex;
-  flex-direction: column;
+const Container = styled.div<{ $theme: "light" | "dark" }>`
   min-height: 100vh;
-  background: ${(props) => (props.$theme === "light" ? "#f9fafb" : "#0f172a")};
-  transition: all 0.3s ease;
+  background: ${props => props.$theme === "light" 
+    ? "linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)" 
+    : "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"};
+  padding: 1rem;
+  
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
 `;
 
-const MainContent = styled.main`
-  flex: 1;
-  padding: 1rem;
-  max-width: 1600px;
+const Content = styled.main`
+  max-width: 1400px;
   margin: 0 auto;
-  width: 100%;
-  box-sizing: border-box;
-
-  @media (min-width: 768px) {
-    padding: 2rem;
-  }
 `;
 
-const ErrorMessage = styled.div<{ $theme: "light" | "dark" }>`
-  background: ${(props) =>
-    props.$theme === "light" ? "#fef2f2" : "rgba(239, 68, 68, 0.1)"};
-  border: 1px solid
-    ${(props) =>
-      props.$theme === "light" ? "#fecaca" : "rgba(239, 68, 68, 0.2)"};
-  color: ${(props) => colors[props.$theme].danger};
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  svg {
-    flex-shrink: 0;
-    font-size: 1.2rem;
-  }
-
-  @media (max-width: 767px) {
-    padding: 0.75rem;
-    font-size: 0.8rem;
-  }
-`;
-
-const LoadingMessage = styled.div<{ $theme: "light" | "dark" }>`
-  padding: 2rem;
+const Header = styled.section<{ $theme: "light" | "dark" }>`
   text-align: center;
-  font-size: 1rem;
-  color: ${(props) => colors[props.$theme].textSecondary};
-  font-weight: 500;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  min-height: 250px;
-  background: ${(props) => colors[props.$theme].surface};
-  border-radius: 12px;
-  box-shadow: ${(props) =>
-    props.$theme === "light"
-      ? "0 1px 3px rgba(0, 0, 0, 0.05)"
-      : "0 1px 3px rgba(0, 0, 0, 0.1)"};
-  border: 1px solid ${(props) => colors[props.$theme].border};
-
-  &::before {
-    content: "";
-    width: 32px;
-    height: 32px;
-    border: 3px solid ${(props) => colors[props.$theme].border};
-    border-top: 3px solid ${(props) => colors[props.$theme].primary};
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
-  }
-
-  @media (min-width: 768px) {
-    padding: 3rem;
-    font-size: 1.125rem;
-    min-height: 300px;
-  }
-`;
-
-const TransactionSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-  margin-top: 1.5rem;
-
-  @media (min-width: 1024px) {
-    display: grid;
-    grid-template-columns: minmax(350px, 400px) 1fr;
-    gap: 2rem;
-    margin-top: 2rem;
-    align-items: start;
-  }
-`;
-
-const ChartContainer = styled.div<{ $theme: "light" | "dark" }>`
-  background: ${(props) => colors[props.$theme].surface};
-  padding: 1.5rem;
-  border-radius: 12px;
-  box-shadow: ${(props) =>
-    props.$theme === "light"
-      ? "0 1px 3px rgba(0, 0, 0, 0.05)"
-      : "0 1px 3px rgba(0, 0, 0, 0.1)"};
-  border: 1px solid ${(props) => colors[props.$theme].borderSecondary};
-  margin-bottom: 1.5rem;
-  transition: all 0.3s ease;
-
-  &:hover {
-    box-shadow: ${(props) =>
-      props.$theme === "light"
-        ? "0 4px 6px rgba(0, 0, 0, 0.1)"
-        : "0 4px 6px rgba(0, 0, 0, 0.15)"};
-  }
-
-  @media (min-width: 768px) {
-    padding: 2rem;
-    border-radius: 12px;
-    margin-bottom: 2rem;
-  }
-`;
-
-const WelcomeSection = styled.div<{ $theme: "light" | "dark" }>`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: ${(props) =>
-    props.$theme === "light"
-      ? "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)"
-      : "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)"};
-  color: white;
-  padding: 1.5rem;
-  border-radius: 12px;
-  margin-bottom: 1.5rem;
-  box-shadow: ${(props) =>
-    props.$theme === "light"
-      ? "0 4px 6px rgba(79, 70, 229, 0.15)"
-      : "0 4px 6px rgba(99, 102, 241, 0.15)"};
+  margin-bottom: 2rem;
+  padding: 2rem 1rem;
+  background: ${props => colors[props.$theme].surface};
+  border-radius: 16px;
+  box-shadow: ${props => props.$theme === "light" 
+    ? "0 8px 32px rgba(0, 0, 0, 0.1)" 
+    : "0 8px 32px rgba(0, 0, 0, 0.3)"};
+  border: 1px solid ${props => colors[props.$theme].border};
   position: relative;
   overflow: hidden;
 
-  &::after {
+  &::before {
     content: "";
     position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 150px;
-    height: 150px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 50%;
-  }
-
-  @media (min-width: 768px) {
-    padding: 2rem;
-    margin-bottom: 2rem;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4f46e5, #7c3aed, #ec4899);
   }
 `;
 
-const WelcomeTitle = styled.h1`
-  font-size: 1.5rem;
-  text-align: center;
-  font-weight: 700;
-  margin: 0 auto 0.5rem auto;
+const Title = styled.h1<{ $theme: "light" | "dark" }>`
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: ${props => colors[props.$theme].text};
+  margin: 0 0 0.75rem 0;
   letter-spacing: -0.025em;
-  line-height: 1.3;
-  position: relative;
-  z-index: 1;
-
+  
   @media (min-width: 768px) {
-    font-size: 1.75rem;
+    font-size: 2.25rem;
   }
 `;
 
-const WelcomeSubtitle = styled.p`
-  font-size: 0.875rem;
-  opacity: 0.9;
+const Subtitle = styled.p<{ $theme: "light" | "dark" }>`
+  font-size: 1rem;
+  color: ${props => colors[props.$theme].textSecondary};
   margin: 0 auto;
-  font-weight: 400;
-  line-height: 1.5;
-  max-width: 600px;
-  position: relative;
-  text-align: center;
-  z-index: 1;
-
+  max-width: 500px;
+  line-height: 1.6;
+  font-weight: 500;
+  
   @media (min-width: 768px) {
-    font-size: 1rem;
+    font-size: 1.125rem;
   }
 `;
 
-const StatsContainer = styled.div`
+const ErrorAlert = styled.div<{ $theme: "light" | "dark" }>`
+  background: ${props => props.$theme === "light" ? "#fef2f2" : "rgba(239, 68, 68, 0.1)"};
+  border: 1px solid ${props => props.$theme === "light" ? "#fca5a5" : "rgba(239, 68, 68, 0.2)"};
+  color: ${props => colors[props.$theme].danger};
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+
+  svg {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+`;
+
+const LoadingState = styled.div<{ $theme: "light" | "dark" }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  background: ${props => colors[props.$theme].surface};
+  border-radius: 16px;
+  border: 1px solid ${props => colors[props.$theme].border};
+  min-height: 300px;
+  
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid ${props => colors[props.$theme].border};
+    border-top: 3px solid ${props => colors[props.$theme].primary};
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 1rem;
+  }
+  
+  p {
+    color: ${props => colors[props.$theme].textSecondary};
+    font-weight: 500;
+    margin: 0;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+`;
+
+const StatsGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 
   @media (min-width: 640px) {
     grid-template-columns: repeat(4, 1fr);
-  }
-
-  @media (min-width: 768px) {
-    margin-bottom: 2rem;
+    gap: 1.25rem;
   }
 `;
 
-const StatCard = styled.div<{ $theme: "light" | "dark" }>`
-  background: ${(props) => colors[props.$theme].surface};
-  padding: 1rem;
-  border-radius: 8px;
-  box-shadow: ${(props) =>
-    props.$theme === "light"
-      ? "0 1px 2px rgba(0, 0, 0, 0.05)"
-      : "0 1px 2px rgba(0, 0, 0, 0.1)"};
-  border: 1px solid ${(props) => colors[props.$theme].borderSecondary};
-  transition: all 0.3s ease;
+const StatCard = styled.div<{ $theme: "light" | "dark"; $accent?: string }>`
+  background: ${props => colors[props.$theme].surface};
+  padding: 1.25rem;
+  border-radius: 12px;
+  border: 1px solid ${props => colors[props.$theme].border};
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: ${props => props.$accent || colors[props.$theme].primary};
+  }
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: ${(props) =>
-      props.$theme === "light"
-        ? "0 4px 6px rgba(0, 0, 0, 0.1)"
-        : "0 4px 6px rgba(0, 0, 0, 0.15)"};
-  }
-
-  @media (min-width: 768px) {
-    padding: 1.25rem;
+    box-shadow: ${props => props.$theme === "light" 
+      ? "0 8px 25px rgba(0, 0, 0, 0.1)" 
+      : "0 8px 25px rgba(0, 0, 0, 0.2)"};
   }
 `;
 
-const StatTitle = styled.p<{ $theme: "light" | "dark" }>`
-  font-size: 0.75rem;
-  color: ${(props) => colors[props.$theme].textSecondary};
-  margin: 0 0 0.5rem 0;
-  font-weight: 500;
+const StatHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-bottom: 0.5rem;
 `;
 
-const StatValue = styled.h3<{ $theme: "light" | "dark" }>`
-  font-size: 1.25rem;
-  color: ${(props) => colors[props.$theme].text};
-  margin: 0;
+const StatLabel = styled.span<{ $theme: "light" | "dark" }>`
+  font-size: 0.8rem;
+  color: ${props => colors[props.$theme].textSecondary};
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+`;
 
+const StatValue = styled.div<{ $theme: "light" | "dark"; $color?: string }>`
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: ${props => props.$color || colors[props.$theme].text};
+  
   @media (min-width: 768px) {
-    font-size: 1.5rem;
+    font-size: 1.375rem;
   }
 `;
+
+const ChartSection = styled.div<{ $theme: "light" | "dark" }>`
+  background: ${props => colors[props.$theme].surface};
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid ${props => colors[props.$theme].border};
+  margin-bottom: 2rem;
+  box-shadow: ${props => props.$theme === "light" 
+    ? "0 4px 20px rgba(0, 0, 0, 0.08)" 
+    : "0 4px 20px rgba(0, 0, 0, 0.15)"};
+
+  @media (min-width: 768px) {
+    padding: 2rem;
+  }
+`;
+
+const TransactionGrid = styled.div`
+  display: grid;
+  gap: 1.5rem;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: 380px 1fr;
+    gap: 2rem;
+  }
+`;
+
 const Dashboard: React.FC = () => {
   const { currentUser } = useAuth();
   const { theme } = useTheme();
@@ -294,11 +231,8 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true);
       setError("");
-
-      const userTransactions = await transactionsService.getTransactions(
-        currentUser.uid
-      );
-
+      const userTransactions = await transactionsService.getTransactions(currentUser.uid);
+      
       if (!userTransactions) {
         throw new Error("Nenhuma transação encontrada");
       }
@@ -306,15 +240,13 @@ const Dashboard: React.FC = () => {
       setTransactions(userTransactions);
     } catch (error: any) {
       console.error("Erro ao buscar transações:", error);
-
-      let errorMessage = "Erro ao carregar transações";
-      if (error.code === "permission-denied") {
-        errorMessage = "Permissão negada. Verifique suas credenciais.";
-      } else if (error.code === "unauthenticated") {
-        errorMessage = "Usuário não autenticado. Faça login novamente.";
-      }
-
-      setError(errorMessage);
+      
+      const errorMessages = {
+        "permission-denied": "Permissão negada. Verifique suas credenciais.",
+        "unauthenticated": "Usuário não autenticado. Faça login novamente.",
+      };
+      
+      setError(errorMessages[error.code] || "Erro ao carregar transações");
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -325,119 +257,103 @@ const Dashboard: React.FC = () => {
     fetchTransactions();
   }, [currentUser]);
 
-  const handleTransactionChange = () => {
-    fetchTransactions();
+  const handleTransactionChange = () => fetchTransactions();
+
+  const stats = {
+    income: transactions.filter(t => t.type === "income").reduce((sum, t) => sum + t.amount, 0),
+    expenses: transactions.filter(t => t.type === "expense").reduce((sum, t) => sum + t.amount, 0),
   };
 
-  const totalIncome = transactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
+  const balance = stats.income - stats.expenses;
+  const formatCurrency = (value: number) => 
+    new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
 
-  const totalExpenses = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const balance = totalIncome - totalExpenses;
-  const transactionCount = transactions.length;
+  if (loading) {
+    return (
+      <Container $theme={theme}>
+        <Content>
+          <LoadingState $theme={theme}>
+            <div className="spinner" />
+            <p>Carregando suas transações...</p>
+          </LoadingState>
+        </Content>
+      </Container>
+    );
+  }
 
   return (
-    <DashboardContainer $theme={theme}>
-      <MainContent>
-        <WelcomeSection $theme={theme}>
-          <WelcomeTitle>Bem-vindo ao seu Dashboard Financeiro</WelcomeTitle>
-          <WelcomeSubtitle>
-            Acompanhe seus gastos, receitas e mantenha suas finanças sob
-            controle
-          </WelcomeSubtitle>
-        </WelcomeSection>
+    <Container $theme={theme}>
+      <Content>
+        <Header $theme={theme}>
+          <Title $theme={theme}>Dashboard Financeiro</Title>
+          <Subtitle $theme={theme}>
+            Controle suas finanças de forma inteligente e organize seu futuro financeiro
+          </Subtitle>
+        </Header>
 
         {error && (
-          <ErrorMessage $theme={theme}>
+          <ErrorAlert $theme={theme}>
             <FiAlertCircle />
             {error}
-          </ErrorMessage>
+          </ErrorAlert>
         )}
 
-        {loading ? (
-          <LoadingMessage $theme={theme}>
-            Carregando suas transações...
-          </LoadingMessage>
-        ) : (
-          <>
-            <StatsContainer>
-              <StatCard $theme={theme}>
-                <StatTitle $theme={theme}>
-                  <FiTrendingUp />
-                  Receitas
-                </StatTitle>
-                <StatValue $theme={theme}>
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(totalIncome)}
-                </StatValue>
-              </StatCard>
+        <StatsGrid>
+          <StatCard $theme={theme} $accent="#10b981">
+            <StatHeader>
+              <FiTrendingUp size={16} color="#10b981" />
+              <StatLabel $theme={theme}>Receitas</StatLabel>
+            </StatHeader>
+            <StatValue $theme={theme} $color="#10b981">
+              {formatCurrency(stats.income)}
+            </StatValue>
+          </StatCard>
 
-              <StatCard $theme={theme}>
-                <StatTitle $theme={theme}>
-                  <FiTrendingUp style={{ transform: "rotate(180deg)" }} />
-                  Despesas
-                </StatTitle>
-                <StatValue $theme={theme}>
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(totalExpenses)}
-                </StatValue>
-              </StatCard>
+          <StatCard $theme={theme} $accent="#ef4444">
+            <StatHeader>
+              <FiTrendingDown size={16} color="#ef4444" />
+              <StatLabel $theme={theme}>Despesas</StatLabel>
+            </StatHeader>
+            <StatValue $theme={theme} $color="#ef4444">
+              {formatCurrency(stats.expenses)}
+            </StatValue>
+          </StatCard>
 
-              <StatCard $theme={theme}>
-                <StatTitle $theme={theme}>
-                  <FiDollarSign />
-                  Saldo
-                </StatTitle>
-                <StatValue
-                  $theme={theme}
-                  style={{ color: balance >= 0 ? "#10b981" : "#ef4444" }}
-                >
-                  {new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(balance)}
-                </StatValue>
-              </StatCard>
+          <StatCard $theme={theme} $accent={balance >= 0 ? "#10b981" : "#ef4444"}>
+            <StatHeader>
+              <FiDollarSign size={16} color={balance >= 0 ? "#10b981" : "#ef4444"} />
+              <StatLabel $theme={theme}>Saldo</StatLabel>
+            </StatHeader>
+            <StatValue $theme={theme} $color={balance >= 0 ? "#10b981" : "#ef4444"}>
+              {formatCurrency(balance)}
+            </StatValue>
+          </StatCard>
 
-              <StatCard $theme={theme}>
-                <StatTitle $theme={theme}>
-                  <FiPieChart />
-                  Transações
-                </StatTitle>
-                <StatValue $theme={theme}>{transactionCount}</StatValue>
-              </StatCard>
-            </StatsContainer>
+          <StatCard $theme={theme} $accent="#6366f1">
+            <StatHeader>
+              <FiActivity size={16} color="#6366f1" />
+              <StatLabel $theme={theme}>Transações</StatLabel>
+            </StatHeader>
+            <StatValue $theme={theme} $color="#6366f1">
+              {transactions.length}
+            </StatValue>
+          </StatCard>
+        </StatsGrid>
 
-            <ChartContainer $theme={theme}>
-              <Chart transactions={transactions} />
-            </ChartContainer>
+        <ChartSection $theme={theme}>
+          <Chart transactions={transactions} />
+        </ChartSection>
 
-            <TransactionSection>
-              <TransactionForm onTransactionAdded={handleTransactionChange} />
-              <TransactionList
-                transactions={transactions}
-                onTransactionDeleted={handleTransactionChange}
-              />
-            </TransactionSection>
-          </>
-        )}
-      </MainContent>
-    </DashboardContainer>
+        <TransactionGrid>
+          <TransactionForm onTransactionAdded={handleTransactionChange} />
+          <TransactionList
+            transactions={transactions}
+            onTransactionDeleted={handleTransactionChange}
+          />
+        </TransactionGrid>
+      </Content>
+    </Container>
   );
 };
 
 export default Dashboard;
-
-
-
-
-
-
