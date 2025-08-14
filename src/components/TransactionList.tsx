@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import { useTheme, colors } from "../contexts/ThemeContext";
-import { FiTrash2, FiEdit, FiArrowUp, FiArrowDown } from "react-icons/fi";
+import { useAuth } from "../contexts/AuthContext";
+import { transactionsService } from "../services/transactionsService";
+import { FiTrash2, FiArrowUp, FiArrowDown } from "react-icons/fi";
 import type { Transaction } from "../interfaces/Transaction";
 
 const ListContainer = styled.div<{ $theme: "light" | "dark" }>`
@@ -60,7 +62,7 @@ const TransactionTable = styled.table`
   border-spacing: 0 12px;
 
   @media (max-width: 768px) {
-    display: none; /* Esconde tabela no mobile */
+    display: none;
   }
 `;
 
@@ -117,6 +119,21 @@ const TableCell = styled.td<{ $theme: "light" | "dark" }>`
   }
 `;
 
+const TitleCell = styled(TableCell)<{ $theme: "light" | "dark" }>`
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 1200px) {
+    max-width: 150px;
+  }
+
+  @media (max-width: 992px) {
+    max-width: 120px;
+  }
+`;
+
 const AmountCell = styled(TableCell)<{
   $type: "income" | "expense";
   $theme: "light" | "dark";
@@ -141,27 +158,18 @@ const CategoryBadge = styled.span<{ $theme: "light" | "dark" }>`
   white-space: nowrap;
 `;
 
-const ActionButton = styled.button<{
-  $theme: "light" | "dark";
-  $variant: "edit" | "delete";
-}>`
+const ActionButton = styled.button<{ $theme: "light" | "dark" }>`
   background: none;
   border: none;
   cursor: pointer;
   padding: 0.5rem;
   border-radius: 8px;
-  color: ${(props) =>
-    props.$variant === "edit"
-      ? colors[props.$theme].textSecondary
-      : colors[props.$theme].danger};
+  color: ${(props) => colors[props.$theme].danger};
   transition: all 0.25s ease;
 
   &:hover {
     background: ${(props) => colors[props.$theme].backgroundSecondary};
-    color: ${(props) =>
-      props.$variant === "edit"
-        ? colors[props.$theme].primary
-        : colors[props.$theme].dangerDark};
+    color: ${(props) => colors[props.$theme].dangerDark};
     transform: scale(1.1);
   }
 
@@ -170,12 +178,11 @@ const ActionButton = styled.button<{
     outline-offset: 2px;
   }
 
-  & + & {
-    margin-left: 0.75rem;
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 `;
-
-/* === Estilos para Mobile: Cards === */
 
 const CardList = styled.div<{ $theme: "light" | "dark" }>`
   display: none;
@@ -218,13 +225,42 @@ const CardRow = styled.div<{ $theme: "light" | "dark" }>`
     color: ${(props) => colors[props.$theme].textSecondary};
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  & span:last-child {
+    text-align: right;
+    margin-left: 1rem;
+  }
+`;
+
+const TruncatedTitle = styled.span<{ $theme: "light" | "dark" }>`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 200px;
+
+  @media (max-width: 480px) {
+    max-width: 150px;
+  }
+
+  @media (max-width: 360px) {
+    max-width: 120px;
   }
 `;
 
 const CardActions = styled.div`
   margin-top: 1rem;
   display: flex;
-  gap: 1rem;
+  justify-content: center;
+`;
+
+const EmptyMessage = styled.div<{ $theme: "light" | "dark" }>`
+  padding: 3rem 0;
+  text-align: center;
+  color: ${(props) => colors[props.$theme].textSecondary};
+  font-size: 1rem;
+  font-weight: 500;
 `;
 
 interface TransactionListProps {
@@ -237,14 +273,33 @@ const TransactionList: React.FC<TransactionListProps> = ({
   onTransactionDeleted,
 }) => {
   const { theme } = useTheme();
+  const { currentUser } = useAuth();
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
-  const handleDelete = async (_id: string) => {
-    if (window.confirm("Tem certeza que deseja excluir esta transação?")) {
-      try {
-        onTransactionDeleted();
-      } catch (error) {
-        console.error("Error deleting transaction:", error);
-      }
+  const handleDelete = async (id: string) => {
+    if (!currentUser) {
+      alert("Usuário não autenticado");
+      return;
+    }
+
+    if (!window.confirm("Tem certeza que deseja excluir esta transação?")) {
+      return;
+    }
+
+    setDeletingIds((prev) => new Set([...prev, id]));
+
+    try {
+      await transactionsService.deleteTransaction(id);
+      onTransactionDeleted();
+    } catch (error) {
+      console.error("Erro ao deletar transação:", error);
+      alert("Erro ao excluir transação. Tente novamente.");
+    } finally {
+      setDeletingIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(id);
+        return newSet;
+      });
     }
   };
 
@@ -258,6 +313,25 @@ const TransactionList: React.FC<TransactionListProps> = ({
       style: "currency",
       currency: "BRL",
     }).format(amount);
+  };
+
+  const getCategoryName = (category: string) => {
+    const categories: { [key: string]: string } = {
+      food: "Alimentação",
+      transport: "Transporte",
+      housing: "Moradia",
+      entertainment: "Lazer",
+      health: "Saúde",
+      education: "Educação",
+      salary: "Salário",
+      other: "Outros",
+    };
+    return categories[category] || category;
+  };
+
+  const truncateTitle = (title: string, maxLength: number) => {
+    if (title.length <= maxLength) return title;
+    return title.substring(0, maxLength) + "...";
   };
 
   return (
@@ -290,7 +364,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
             <tbody>
               {transactions.map((transaction) => (
                 <TableRow key={transaction.id} $theme={theme}>
-                  <TableCell $theme={theme}>{transaction.title}</TableCell>
+                  <TitleCell $theme={theme} title={transaction.title}>
+                    {transaction.title}
+                  </TitleCell>
                   <AmountCell
                     $theme={theme}
                     $type={transaction.type}
@@ -310,22 +386,14 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   </TableCell>
                   <TableCell $theme={theme}>
                     <CategoryBadge $theme={theme}>
-                      {transaction.category}
+                      {getCategoryName(transaction.category)}
                     </CategoryBadge>
                   </TableCell>
                   <TableCell $theme={theme}>
                     <ActionButton
                       $theme={theme}
-                      $variant="edit"
-                      onClick={() => console.log("Edit", transaction.id)}
-                      aria-label={`Editar transação ${transaction.title}`}
-                    >
-                      <FiEdit size={18} />
-                    </ActionButton>
-                    <ActionButton
-                      $theme={theme}
-                      $variant="delete"
                       onClick={() => handleDelete(transaction.id)}
+                      disabled={deletingIds.has(transaction.id)}
                       aria-label={`Excluir transação ${transaction.title}`}
                     >
                       <FiTrash2 size={18} />
@@ -342,7 +410,9 @@ const TransactionList: React.FC<TransactionListProps> = ({
               <Card key={transaction.id} $theme={theme} role="listitem">
                 <CardRow $theme={theme}>
                   <span>Descrição</span>
-                  <span>{transaction.title}</span>
+                  <TruncatedTitle $theme={theme} title={transaction.title}>
+                    {transaction.title}
+                  </TruncatedTitle>
                 </CardRow>
                 <CardRow $theme={theme}>
                   <span>Valor</span>
@@ -369,23 +439,15 @@ const TransactionList: React.FC<TransactionListProps> = ({
                 <CardRow $theme={theme}>
                   <span>Categoria</span>
                   <CategoryBadge $theme={theme}>
-                    {transaction.category}
+                    {getCategoryName(transaction.category)}
                   </CategoryBadge>
                 </CardRow>
 
                 <CardActions>
                   <ActionButton
                     $theme={theme}
-                    $variant="edit"
-                    onClick={() => console.log("Edit", transaction.id)}
-                    aria-label={`Editar transação ${transaction.title}`}
-                  >
-                    <FiEdit size={18} />
-                  </ActionButton>
-                  <ActionButton
-                    $theme={theme}
-                    $variant="delete"
                     onClick={() => handleDelete(transaction.id)}
+                    disabled={deletingIds.has(transaction.id)}
                     aria-label={`Excluir transação ${transaction.title}`}
                   >
                     <FiTrash2 size={18} />
@@ -399,13 +461,5 @@ const TransactionList: React.FC<TransactionListProps> = ({
     </ListContainer>
   );
 };
-
-const EmptyMessage = styled.div<{ $theme: "light" | "dark" }>`
-  padding: 3rem 0;
-  text-align: center;
-  color: ${(props) => colors[props.$theme].textSecondary};
-  font-size: 1rem;
-  font-weight: 500;
-`;
 
 export default TransactionList;

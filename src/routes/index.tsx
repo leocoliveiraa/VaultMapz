@@ -4,6 +4,7 @@ import Login from "../pages/Login";
 import Dashboard from "../pages/Dashboard";
 import Header from "../components/Header";
 import styled from "styled-components";
+import Footer from "../components/Footer";
 
 const PageWrapper = styled.div``;
 
@@ -20,6 +21,7 @@ const Routes: React.FC = () => {
       <ContentWrapper>
         <Dashboard />
       </ContentWrapper>
+      <Footer />
     </PageWrapper>
   );
 };

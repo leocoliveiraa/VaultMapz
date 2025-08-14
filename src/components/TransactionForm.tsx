@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useTheme, colors } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
+import { transactionsService } from "../services/transactionsService";
 import { FiPlusCircle, FiDollarSign, FiCalendar, FiTag } from "react-icons/fi";
 
 interface TransactionFormData {
@@ -152,8 +154,8 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
   onTransactionAdded,
 }) => {
   const { theme } = useTheme();
+  const { currentUser } = useAuth();
 
-  // Estado usando o tipo novo:
   const [formData, setFormData] = useState<TransactionFormData>({
     title: "",
     amount: 0,
@@ -176,11 +178,31 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!currentUser) {
+      alert("Usuário não autenticado");
+      return;
+    }
+
+    if (!formData.title.trim() || formData.amount <= 0 || !formData.category) {
+      alert("Por favor, preencha todos os campos obrigatórios");
+      return;
+    }
+
     setLoading(true);
 
     try {
-      onTransactionAdded();
+      await transactionsService.addTransaction({
+        userId: currentUser.uid,
+        title: formData.title.trim(),
+        amount: formData.amount,
+        type: formData.type,
+        category: formData.category,
+        date: formData.date,
+        description: "",
+      });
 
+      // Reset form
       setFormData({
         title: "",
         amount: 0,
@@ -188,8 +210,12 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
         category: "",
         date: new Date().toISOString().split("T")[0],
       });
+
+      // Notify parent component
+      onTransactionAdded();
     } catch (error) {
       console.error("Error adding transaction:", error);
+      alert("Erro ao adicionar transação. Tente novamente.");
     } finally {
       setLoading(false);
     }
@@ -226,7 +252,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({
             value={formData.amount === 0 ? "" : formData.amount}
             onChange={handleChange}
             step="0.01"
-            min="0"
+            min="0.01"
             required
           />
         </InputGroup>

@@ -1,9 +1,8 @@
 import { Timestamp } from "firebase/firestore";
-import type { ReactNode } from "react";
 
 export interface Transaction {
-  title: ReactNode;
   id: string;
+  title: string;
   type: "income" | "expense";
   category: string;
   amount: number;
@@ -26,6 +25,7 @@ export interface User {
 }
 
 export interface TransactionFormData {
+  title: string;
   type: "income" | "expense";
   category: string;
   amount: string;

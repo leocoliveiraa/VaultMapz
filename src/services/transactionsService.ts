@@ -4,10 +4,8 @@ import {
   getDocs,
   deleteDoc,
   doc,
-  updateDoc,
   query,
   where,
-  orderBy,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../firebase/config";
@@ -27,7 +25,7 @@ const isTimestamp = (value: any): value is Timestamp => {
 
 export const transactionsService = {
   async addTransaction(
-    transaction: Omit<Transaction, "id" | "createdAt">
+    transaction: Omit<Transaction, "id" | "createdAt"> & { userId: string }
   ): Promise<void> {
     try {
       console.log("Adding transaction:", transaction);
@@ -91,74 +89,6 @@ export const transactionsService = {
       return transactions;
     } catch (error) {
       console.error("Error fetching transactions:", error);
-      throw error;
-    }
-  },
-
-  async getTransactionsWithFirestoreOrder(
-    userId: string
-  ): Promise<Transaction[]> {
-    try {
-      console.log(
-        "Fetching transactions with Firestore order for userId:",
-        userId
-      );
-
-      const q = query(
-        collection(db, "transactions"),
-        where("userId", "==", userId),
-        orderBy("date", "desc")
-      );
-
-      const querySnapshot = await getDocs(q);
-
-      const transactions = querySnapshot.docs.map((doc) => {
-        const data = doc.data();
-        return {
-          id: doc.id,
-          ...data,
-          date: data.date?.toDate ? data.date.toDate() : data.date,
-          createdAt: data.createdAt?.toDate
-            ? data.createdAt.toDate()
-            : data.createdAt,
-        };
-      }) as Transaction[];
-
-      return transactions;
-    } catch (error) {
-      console.error("Error fetching transactions with Firestore order:", error);
-      throw error;
-    }
-  },
-
-  async updateTransaction(
-    id: string,
-    transaction: Partial<Transaction>
-  ): Promise<void> {
-    try {
-      console.log("Updating transaction:", id, transaction);
-
-      const docRef = doc(db, "transactions", id);
-
-      const updateData: any = { ...transaction };
-      if (updateData.date) {
-        if (isDate(updateData.date)) {
-          updateData.date = Timestamp.fromDate(updateData.date);
-        } else if (isString(updateData.date)) {
-          updateData.date = Timestamp.fromDate(new Date(updateData.date));
-        } else if (isTimestamp(updateData.date)) {
-          updateData.date = updateData.date;
-        } else {
-          updateData.date = Timestamp.fromDate(
-            new Date(updateData.date as any)
-          );
-        }
-      }
-
-      await updateDoc(docRef, updateData);
-      console.log("Transaction updated successfully");
-    } catch (error) {
-      console.error("Error updating transaction:", error);
       throw error;
     }
   },
