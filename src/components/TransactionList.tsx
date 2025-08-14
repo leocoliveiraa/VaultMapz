@@ -329,11 +329,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
     return categories[category] || category;
   };
 
-  const truncateTitle = (title: string, maxLength: number) => {
-    if (title.length <= maxLength) return title;
-    return title.substring(0, maxLength) + "...";
-  };
-
   return (
     <ListContainer $theme={theme}>
       <ListHeader $theme={theme}>
@@ -350,7 +345,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
         </EmptyMessage>
       ) : (
         <>
-          {/* Tabela para desktop */}
           <TransactionTable>
             <TableHeader $theme={theme}>
               <tr>
@@ -404,7 +398,6 @@ const TransactionList: React.FC<TransactionListProps> = ({
             </tbody>
           </TransactionTable>
 
-          {/* Cards para mobile */}
           <CardList $theme={theme}>
             {transactions.map((transaction) => (
               <Card key={transaction.id} $theme={theme} role="listitem">
@@ -441,7 +434,7 @@ const TransactionList: React.FC<TransactionListProps> = ({
                   <CategoryBadge $theme={theme}>
                     {getCategoryName(transaction.category)}
                   </CategoryBadge>
-                </CardRow>
+                  </CardRow>
 
                 <CardActions>
                   <ActionButton
